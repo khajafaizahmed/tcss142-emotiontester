@@ -1,0 +1,8 @@
+Line 1: Positive (score +4)
+Line 2: Negative (score -3)
+Line 3: Positive (score +2)
+Line 4: Negative (score -4)
+Line 5: Positive (score +3)
+----------------------------------
+Positive: 3  Negative: 2  Neutral: 0
+Overall sentiment: Positive :)
