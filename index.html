@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TCSS 142 Project 3 Tester – EmotionAnalyzer</title>
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background:#101010;
+  color:#f0f0f0;
+  margin:0;
+  padding:0;
+  text-align:center;
+}
+h1 {color:#50fa7b;}
+textarea {
+  width:90%;
+  height:350px;
+  background:#1e1e1e;
+  color:#fafafa;
+  font-family:monospace;
+  font-size:14px;
+  border:1px solid #333;
+  border-radius:6px;
+  padding:10px;
+}
+button {
+  background:#50fa7b;
+  border:none;
+  border-radius:6px;
+  padding:10px 20px;
+  margin:6px;
+  font-size:15px;
+  cursor:pointer;
+}
+pre {
+  width:90%;
+  margin:auto;
+  background:#181818;
+  text-align:left;
+  padding:10px;
+  overflow-x:auto;
+  white-space:pre-wrap;
+  border-radius:6px;
+}
+</style>
+</head>
+<body>
+<h1>TCSS 142 — Project 3 Tester</h1>
+<p>Paste <b>EmotionAnalyzer.java</b> and click <b>Run Tests</b>.</p>
+
+<textarea id="code" placeholder="Paste your code here..."></textarea><br>
+<button onclick="insertTemplate()">Insert Template</button>
+<button onclick="runTests()">Run Tests</button>
+
+<h3>Output</h3>
+<pre id="out">(waiting...)</pre>
+
+<script>
+const outEl=document.getElementById("out");
+const codeEl=document.getElementById("code");
+
+function insertTemplate(){
+ const tpl=`public class EmotionAnalyzer {
+    // --- Required per Project 3 spec ---
+    // public static final String[] POS, NEG;
+    // public static final int[] PW, NW;
+    // public static String normalizeToken(String token)
+    // public static int indexOf(String[] arr, String target)
+    // public static int scoreLine(String line, String[] pos, int[] pw, String[] neg, int[] nw)
+    // public static String classify(int score)
+    // public static void writeLineResult(PrintWriter out, int lineNum, int score, String label)
+    // public static void writeSummary(PrintWriter out, int pos, int neg, int neu)
+}`;
+ if(codeEl.value.trim() && !confirm("Replace current code?")) return;
+ codeEl.value=tpl;
+}
+
+async function runTests(){
+  outEl.textContent="Running tests...";
+  const code=codeEl.value;
+  try{
+    const res=await fetch("/run",{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({code})});
+    outEl.textContent=await res.text();
+  }catch(e){
+    outEl.textContent="Error: "+e;
+  }
+}
+</script>
+</body>
+</html>
