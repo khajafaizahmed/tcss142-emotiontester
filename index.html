@@ -13,13 +13,33 @@
 <style>
 :root {
   --bg-gradient: radial-gradient(circle at top, #181c3a 0%, #050810 55%, #02040a 100%);
+  --bg-surface: rgba(15, 23, 42, 0.9);
   --accent: #4ade80;
   --accent-soft: rgba(74, 222, 128, 0.15);
   --accent-strong: #22c55e;
   --accent-danger: #fb7185;
-  --card-bg: rgba(17, 24, 39, 0.9);
-  --border-subtle: rgba(148, 163, 184, 0.35);
+  --accent-info: #38bdf8;
+  --card-bg: rgba(17, 24, 39, 0.88);
+  --border-subtle: rgba(148, 163, 184, 0.4);
+  --text-main: #e5e7eb;
   --text-muted: #9ca3af;
+  --shadow-strong: 0 22px 60px rgba(0, 0, 0, 0.75);
+}
+
+/* Light theme overrides */
+body[data-theme="light"] {
+  --bg-gradient: radial-gradient(circle at top, #e0f2fe 0%, #f8fafc 55%, #e5e7eb 100%);
+  --bg-surface: rgba(248, 250, 252, 0.92);
+  --accent: #16a34a;
+  --accent-soft: rgba(34, 197, 94, 0.14);
+  --accent-strong: #22c55e;
+  --accent-danger: #e11d48;
+  --accent-info: #0ea5e9;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --border-subtle: rgba(148, 163, 184, 0.55);
+  --text-main: #020617;
+  --text-muted: #6b7280;
+  --shadow-strong: 0 18px 45px rgba(15, 23, 42, 0.2);
 }
 
 * {
@@ -30,23 +50,87 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #e5e7eb;
+  color: var(--text-main);
   background: var(--bg-gradient);
   display: flex;
   align-items: stretch;
   justify-content: center;
+  position: relative;
+  overflow-x: hidden;
 }
+
+/* Animated background layer */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: -40%;
+  pointer-events: none;
+  z-index: -2;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.25) 0, transparent 45%),
+    radial-gradient(circle at 80% 0%, rgba(168, 85, 247, 0.24) 0, transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(34, 197, 94, 0.22) 0, transparent 55%);
+  filter: blur(22px);
+  opacity: 0.95;
+  transform: translate3d(0, 0, 0);
+  animation: auroraShift 26s ease-in-out infinite alternate;
+}
+body::after {
+  animation-duration: 38s;
+  mix-blend-mode: screen;
+  opacity: 0.7;
+}
+
+@keyframes auroraShift {
+  0%   { transform: translate3d(-3%, -2%, 0) scale(1.02); }
+  50%  { transform: translate3d(3%, 2%, 0)  scale(1.06); }
+  100% { transform: translate3d(-2%, 4%, 0) scale(1.03); }
+}
+
+/* Floating particles */
+.particle-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: -1;
+}
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.6);
+  box-shadow: 0 0 10px rgba(148, 163, 184, 0.7);
+  opacity: 0.0;
+  animation: floatParticle linear infinite;
+}
+@keyframes floatParticle {
+  0%   { transform: translate3d(var(--x-start), 110%, 0); opacity: 0; }
+  10%  { opacity: 0.65; }
+  90%  { opacity: 0.65; }
+  100% { transform: translate3d(var(--x-end), -10%, 0); opacity: 0; }
+}
+
+/* Main layout */
 
 .main-shell {
   width: 100%;
-  max-width: 1100px;
-  margin: 24px auto;
+  max-width: 1120px;
+  margin: 26px auto;
   padding: 16px;
+  animation: shellEntrance 0.6s ease-out;
+}
+
+@keyframes shellEntrance {
+  from { opacity: 0; transform: translateY(18px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .hero {
   text-align: left;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
@@ -70,6 +154,8 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--accent);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.7);
 }
 
 .title-chip span.icon {
@@ -83,7 +169,7 @@ body {
 }
 
 .hero h1 span {
-  background: linear-gradient(120deg, #4ade80, #22d3ee);
+  background: linear-gradient(120deg, #4ade80, #22d3ee, #a855f7);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -92,7 +178,7 @@ body {
 .hero-subtitle {
   font-size: 14px;
   color: var(--text-muted);
-  max-width: 560px;
+  max-width: 580px;
 }
 
 .hero-subtitle code {
@@ -114,11 +200,34 @@ body {
   opacity: 0.9;
 }
 
+/* Theme Toggle */
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(15, 23, 42, 0.92);
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s ease-out, border-color 0.15s ease-out, transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+body[data-theme="light"] .theme-toggle {
+  background: rgba(248, 250, 252, 0.9);
+}
+.theme-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.4);
+}
+
 /* Layout */
 
 .shell-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
   gap: 16px;
 }
 
@@ -134,12 +243,29 @@ body {
 /* Left card */
 
 .info-card {
-  border-radius: 18px;
+  border-radius: 20px;
   background: var(--card-bg);
   border: 1px solid var(--border-subtle);
-  padding: 16px 18px 14px;
-  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.65);
+  padding: 18px 20px 16px;
+  box-shadow: var(--shadow-strong);
   backdrop-filter: blur(22px);
+  position: relative;
+  overflow: hidden;
+  animation: cardInLeft 0.7s ease-out;
+}
+
+.info-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.09), transparent 55%);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+@keyframes cardInLeft {
+  from { opacity: 0; transform: translateY(16px) translateX(-8px); }
+  to   { opacity: 1; transform: translateY(0) translateX(0); }
 }
 
 .info-card h2 {
@@ -165,10 +291,14 @@ body {
   padding: 4px 8px;
   border-radius: 999px;
   border: 1px solid rgba(75, 85, 99, 0.9);
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(15, 23, 42, 0.96);
   display: inline-flex;
   align-items: center;
   gap: 5px;
+}
+
+body[data-theme="light"] .info-pill {
+  background: rgba(248, 250, 252, 0.96);
 }
 
 .info-pill span.bullet {
@@ -193,15 +323,37 @@ body {
 /* Right side */
 
 .tester-card {
-  border-radius: 18px;
+  border-radius: 20px;
   background: var(--card-bg);
   border: 1px solid var(--border-subtle);
-  padding: 16px 18px 14px;
-  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(22px);
+  padding: 18px 20px 16px;
+  box-shadow: var(--shadow-strong);
+  backdrop-filter: blur(24px);
   display: flex;
   flex-direction: column;
   gap: 10px;
+  position: relative;
+  overflow: hidden;
+  animation: cardInRight 0.75s ease-out;
+}
+
+.tester-card::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(from 210deg, rgba(34, 197, 94, 0.05), rgba(56, 189, 248, 0.09), rgba(168, 85, 247, 0.06), transparent 60%);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+  animation: cardGlow 16s linear infinite;
+  pointer-events: none;
+}
+@keyframes cardGlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes cardInRight {
+  from { opacity: 0; transform: translateY(18px) translateX(8px); }
+  to   { opacity: 1; transform: translateY(0) translateX(0); }
 }
 
 .tester-header {
@@ -210,6 +362,8 @@ body {
   justify-content: space-between;
   gap: 8px;
   font-size: 12px;
+  position: relative;
+  z-index: 1;
 }
 
 .status-pill {
@@ -221,6 +375,10 @@ body {
   background: rgba(15, 23, 42, 0.95);
   border: 1px solid rgba(55, 65, 81, 0.95);
   color: var(--text-muted);
+}
+body[data-theme="light"] .status-pill {
+  background: rgba(248, 250, 252, 0.96);
+  border-color: rgba(148, 163, 184, 0.8);
 }
 
 .status-dot {
@@ -242,7 +400,7 @@ textarea {
   width: 100%;
   height: 270px;
   background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.97), #020617);
-  color: #e5e7eb;
+  color: var(--text-main);
   font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 13px;
   border: 1px solid rgba(55, 65, 81, 0.95);
@@ -251,8 +409,16 @@ textarea {
   resize: vertical;
   outline: none;
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.9);
+  position: relative;
+  z-index: 1;
 }
-
+body[data-theme="light"] textarea {
+  background: radial-gradient(circle at top left, #f9fafb, #e5e7eb);
+  border-color: rgba(148, 163, 184, 0.7);
+}
+textarea::placeholder {
+  color: rgba(148, 163, 184, 0.8);
+}
 textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.5), 0 0 40px rgba(22, 163, 74, 0.4);
@@ -265,6 +431,8 @@ textarea:focus {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 4px;
+  position: relative;
+  z-index: 1;
 }
 
 button {
@@ -279,6 +447,8 @@ button {
   gap: 7px;
   transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, background 0.12s ease-out, opacity 0.12s;
   letter-spacing: 0.02em;
+  position: relative;
+  overflow: hidden;
 }
 
 button span.icon {
@@ -286,15 +456,29 @@ button span.icon {
 }
 
 button.primary {
-  background: linear-gradient(135deg, var(--accent-strong), #22d3ee);
+  background: linear-gradient(135deg, var(--accent-strong), #22d3ee, #a855f7);
   color: #020617;
   box-shadow: 0 8px 25px rgba(34, 197, 94, 0.5);
 }
+button.primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.35), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.12s ease-out;
+}
+button.primary:hover::after {
+  opacity: 0.55;
+}
 
 button.secondary {
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(15, 23, 42, 0.96);
   border: 1px solid rgba(75, 85, 99, 0.9);
-  color: #e5e7eb;
+  color: var(--text-main);
+}
+body[data-theme="light"] button.secondary {
+  background: rgba(248, 250, 252, 0.96);
 }
 
 button.ghost {
@@ -302,9 +486,12 @@ button.ghost {
   border: 1px dashed rgba(75, 85, 99, 0.9);
   color: var(--text-muted);
 }
+body[data-theme="light"] button.ghost {
+  border-style: dashed;
+}
 
 button:hover {
-  transform: translateY(-1px);
+  transform: translateY(-1px) translateZ(0);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
   opacity: 0.98;
 }
@@ -314,10 +501,27 @@ button:active {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
 }
 
+/* Run button loading state */
+
+button.primary.is-loading {
+  cursor: wait;
+  opacity: 0.92;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.35), 0 0 34px rgba(34, 197, 94, 0.65);
+}
+button.primary.is-loading span.icon {
+  animation: spinLoader 0.9s linear infinite;
+}
+@keyframes spinLoader {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 /* output */
 
 .output-block {
   margin-top: 4px;
+  position: relative;
+  z-index: 1;
 }
 
 .output-label-row {
@@ -345,21 +549,45 @@ pre {
   border: 1px solid rgba(55, 65, 81, 0.95);
   font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 12px;
-  color: #e5e7eb;
+  color: var(--text-main);
+}
+body[data-theme="light"] pre {
+  background: radial-gradient(circle at top left, #f9fafb, #e5e7eb);
+  border-color: rgba(148, 163, 184, 0.75);
 }
 
 /* footer mini */
 
 .footer-note {
-  margin-top: 10px;
+  margin-top: 12px;
   text-align: center;
   font-size: 11px;
   color: var(--text-muted);
   opacity: 0.9;
+  position: relative;
+  padding-top: 10px;
+}
+.footer-note::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.6), transparent);
+  box-shadow: 0 0 18px rgba(148, 163, 184, 0.5);
+}
+
+/* Utility classes */
+
+.hidden {
+  display: none !important;
 }
 </style>
 </head>
 <body>
+<div class="particle-layer" aria-hidden="true"></div>
+
 <div class="main-shell">
 
   <header class="hero">
@@ -378,6 +606,12 @@ pre {
     <div class="hero-meta">
       <div>Class: TCSS 142 Programming Principles</div>
       <div>Project 3 – Emotion aware text log analyzer</div>
+      <div style="margin-top:8px;">
+        <button type="button" class="theme-toggle" id="themeToggle">
+          <span id="themeIcon">🌙</span>
+          <span id="themeLabel">Dark mode</span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -400,7 +634,7 @@ pre {
           <span>Checks arrays, weights, and method contracts</span>
         </div>
         <div class="info-pill">
-          <span class="bullet" style="background: #38bdf8;"></span>
+          <span class="bullet" style="background: var(--accent-info);"></span>
           <span>Highlights formatting problems in summary output</span>
         </div>
         <div class="info-pill">
@@ -422,17 +656,25 @@ pre {
       <textarea id="code" placeholder="// Paste your full EmotionAnalyzer.java here"></textarea>
 
       <div class="button-row">
-        <button class="secondary" onclick="insertTemplate()">
+        <button class="secondary" type="button" onclick="insertTemplate()">
           <span class="icon">📋</span>
           <span>Insert template</span>
         </button>
-        <button class="primary" onclick="runTests()">
-          <span class="icon">▶</span>
-          <span>Run tests</span>
+        <button class="primary" type="button" id="runButton" onclick="runTests()">
+          <span class="icon" id="runIcon">▶</span>
+          <span id="runLabel">Run tests</span>
         </button>
-        <button class="ghost" onclick="clearOutput()">
+        <button class="ghost" type="button" onclick="clearOutput()">
           <span class="icon">🧹</span>
           <span>Clear output</span>
+        </button>
+        <button class="ghost" type="button" onclick="copyOutput()">
+          <span class="icon">📄</span>
+          <span>Copy output</span>
+        </button>
+        <button class="ghost" type="button" onclick="downloadOutput()">
+          <span class="icon">⬇️</span>
+          <span>Download output</span>
         </button>
       </div>
 
@@ -448,7 +690,7 @@ pre {
   </main>
 
   <div class="footer-note">
-    This page runs your code with <code>EmotionAnalyzerTester.java</code> on the server side.
+    This page runs your code with <code>EmotionAnalyzerTester.java</code> on the server side. Designed for TCSS 142 &mdash; Emotion-Aware Text Log Analyzer.
   </div>
 
 </div>
@@ -458,6 +700,70 @@ const outEl = document.getElementById("out");
 const codeEl = document.getElementById("code");
 const statusTextEl = document.getElementById("statusText");
 const statusDotEl = document.getElementById("statusDot");
+const runButton = document.getElementById("runButton");
+const runIcon = document.getElementById("runIcon");
+const runLabel = document.getElementById("runLabel");
+const themeToggle = document.getElementById("themeToggle");
+const themeIcon = document.getElementById("themeIcon");
+const themeLabel = document.getElementById("themeLabel");
+const particleLayer = document.querySelector(".particle-layer");
+
+/* ---------- Theme handling ---------- */
+
+function applyTheme(theme) {
+  document.body.setAttribute("data-theme", theme);
+  if (theme === "light") {
+    themeIcon.textContent = "☀️";
+    themeLabel.textContent = "Light mode";
+  } else {
+    themeIcon.textContent = "🌙";
+    themeLabel.textContent = "Dark mode";
+  }
+}
+
+function toggleTheme() {
+  const current = document.body.getAttribute("data-theme") || "dark";
+  const next = current === "dark" ? "light" : "dark";
+  applyTheme(next);
+  try {
+    localStorage.setItem("ea-theme", next);
+  } catch (_) {
+    // ignore if storage unavailable
+  }
+}
+
+themeToggle.addEventListener("click", toggleTheme);
+
+(function initThemeFromStorage() {
+  let stored = null;
+  try {
+    stored = localStorage.getItem("ea-theme");
+  } catch (_) {
+    stored = null;
+  }
+  applyTheme(stored === "light" ? "light" : "dark");
+})();
+
+/* ---------- Particles ---------- */
+
+(function spawnParticles() {
+  const count = 26;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement("div");
+    p.className = "particle";
+    const xStart = Math.random() * 100;
+    const xEnd = xStart + (Math.random() * 20 - 10);
+    const delay = Math.random() * -18;
+    const duration = 18 + Math.random() * 18;
+    p.style.setProperty("--x-start", xStart + "vw");
+    p.style.setProperty("--x-end", xEnd + "vw");
+    p.style.animationDelay = delay + "s";
+    p.style.animationDuration = duration + "s";
+    particleLayer.appendChild(p);
+  }
+})();
+
+/* ---------- Status helpers ---------- */
 
 function setStatus(text, mode) {
   statusTextEl.textContent = text;
@@ -472,6 +778,8 @@ function setStatus(text, mode) {
     statusDotEl.style.boxShadow = "0 0 10px rgba(74, 222, 128, 0.9)";
   }
 }
+
+/* ---------- Existing required functions ---------- */
 
 function insertTemplate() {
   const tpl = `public class EmotionAnalyzer {
@@ -511,8 +819,11 @@ async function runTests() {
     alert("Please paste your EmotionAnalyzer.java code first.");
     return;
   }
+
   setStatus("Running tests", "running");
   outEl.textContent = "Running tests...";
+  runButton.classList.add("is-loading");
+  runLabel.textContent = "Running…";
 
   try {
     const res = await fetch("/run", {
@@ -531,12 +842,63 @@ async function runTests() {
   } catch (e) {
     outEl.textContent = "Error: " + e;
     setStatus("Network or server error", "error");
+  } finally {
+    runButton.classList.remove("is-loading");
+    runLabel.textContent = "Run tests";
+    runIcon.textContent = "▶";
   }
 }
 
 function clearOutput() {
   outEl.textContent = "(waiting...)";
   setStatus("Ready to run", "ready");
+}
+
+/* ---------- New helpers: copy & download ---------- */
+
+function copyOutput() {
+  const text = outEl.textContent || "";
+  if (!text.trim()) {
+    alert("There is no output to copy yet.");
+    return;
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      () => setStatus("Output copied to clipboard", "ready"),
+      () => alert("Could not copy to clipboard. Please copy manually.")
+    );
+  } else {
+    // Fallback using a temporary textarea
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    document.body.appendChild(temp);
+    temp.select();
+    try {
+      document.execCommand("copy");
+      setStatus("Output copied to clipboard", "ready");
+    } catch (_) {
+      alert("Could not copy to clipboard. Please copy manually.");
+    }
+    document.body.removeChild(temp);
+  }
+}
+
+function downloadOutput() {
+  const text = outEl.textContent || "";
+  if (!text.trim()) {
+    alert("There is no output to download yet.");
+    return;
+  }
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "tester-output.txt";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  setStatus("Output downloaded", "ready");
 }
 </script>
 </body>
