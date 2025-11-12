@@ -14,6 +14,8 @@ body {
   text-align:center;
 }
 h1 {color:#50fa7b;}
+a {color:#50fa7b; text-decoration:none;}
+a:hover {text-decoration:underline;}
 textarea {
   width:90%;
   height:350px;
@@ -34,6 +36,9 @@ button {
   font-size:15px;
   cursor:pointer;
 }
+button:hover {
+  background:#63ff8c;
+}
 pre {
   width:90%;
   margin:auto;
@@ -50,9 +55,17 @@ pre {
 <h1>TCSS 142 — Project 3 Tester</h1>
 <p>Paste <b>EmotionAnalyzer.java</b> and click <b>Run Tests</b>.</p>
 
+<!-- sample file links -->
+<div style="margin:10px 0">
+  <a href="/chatlog.txt" download>⬇️ Download sample input (chatlog.txt)</a>
+  &nbsp;|&nbsp;
+  <a href="/summary.txt" download>📄 Download expected output (summary.txt)</a>
+</div>
+
 <textarea id="code" placeholder="Paste your code here..."></textarea><br>
 <button onclick="insertTemplate()">Insert Template</button>
 <button onclick="runTests()">Run Tests</button>
+<button onclick="saveOutput()">Save Output as summary.txt</button>
 
 <h3>Output</h3>
 <pre id="out">(waiting...)</pre>
@@ -70,8 +83,10 @@ function insertTemplate(){
     // public static int indexOf(String[] arr, String target)
     // public static int scoreLine(String line, String[] pos, int[] pw, String[] neg, int[] nw)
     // public static String classify(int score)
-    // public static void writeLineResult(PrintWriter out, int lineNum, int score, String label)
-    // public static void writeSummary(PrintWriter out, int pos, int neg, int neu)
+    // public static void writeLineResult(java.io.PrintWriter out, int lineNum, int score, String label)
+    // public static void writeSummary(java.io.PrintWriter out, int positives, int negatives, int neutrals)
+    // public static String promptForExistingFile(java.util.Scanner sc, String prompt)
+    // public static char readYesNo(java.util.Scanner sc, String prompt)
 }`;
  if(codeEl.value.trim() && !confirm("Replace current code?")) return;
  codeEl.value=tpl;
@@ -88,6 +103,18 @@ async function runTests(){
   }catch(e){
     outEl.textContent="Error: "+e;
   }
+}
+
+function saveOutput(){
+  const blob=new Blob([outEl.textContent],{type:"text/plain;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="summary.txt";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 </script>
 </body>
