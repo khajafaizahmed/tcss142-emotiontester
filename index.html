@@ -320,6 +320,43 @@ body[data-theme="light"] .info-pill {
   margin-bottom: 4px;
 }
 
+/* Canvas link row */
+
+.info-link-row {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.info-link-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.7);
+  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), rgba(15, 23, 42, 0.95));
+  color: #e0f2fe;
+  text-decoration: none;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, background 0.12s ease-out;
+}
+body[data-theme="light"] .info-link-pill {
+  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), #e0f2fe);
+  color: #0f172a;
+}
+.info-link-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(56, 189, 248, 0.45);
+}
+
 /* Right side */
 
 .tester-card {
@@ -394,7 +431,7 @@ body[data-theme="light"] .status-pill {
   color: var(--text-muted);
 }
 
-/* textarea / output */
+/* textarea / input */
 
 textarea {
   width: 100%;
@@ -516,7 +553,33 @@ button.primary.is-loading span.icon {
   to   { transform: rotate(360deg); }
 }
 
-/* output */
+/* output card */
+
+.output-card {
+  margin-top: 18px;
+  border-radius: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-subtle);
+  padding: 16px 20px 14px;
+  box-shadow: var(--shadow-strong);
+  backdrop-filter: blur(22px);
+  position: relative;
+  overflow: hidden;
+  animation: cardInBottom 0.8s ease-out;
+}
+.output-card::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(circle at 20% 0%, rgba(56, 189, 248, 0.09), transparent 55%);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+  pointer-events: none;
+}
+@keyframes cardInBottom {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 .output-block {
   margin-top: 4px;
@@ -537,6 +600,7 @@ button.primary.is-loading span.icon {
   font-style: italic;
 }
 
+/* Make output wide & scrollable without wrapping */
 pre {
   width: 100%;
   margin: 0;
@@ -544,12 +608,14 @@ pre {
   text-align: left;
   padding: 10px;
   overflow-x: auto;
-  white-space: pre-wrap;
+  overflow-y: auto;
+  white-space: pre; /* no wrapping, keep lines full */
   border-radius: 10px;
   border: 1px solid rgba(55, 65, 81, 0.95);
   font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 12px;
   color: var(--text-main);
+  max-height: 280px;
 }
 body[data-theme="light"] pre {
   background: radial-gradient(circle at top left, #f9fafb, #e5e7eb);
@@ -579,6 +645,25 @@ body[data-theme="light"] pre {
 }
 
 /* Utility classes */
+
+.kb-shortcuts {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+kbd {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text-main);
+}
+body[data-theme="light"] kbd {
+  background: rgba(248, 250, 252, 0.96);
+}
 
 .hidden {
   display: none !important;
@@ -642,6 +727,21 @@ body[data-theme="light"] pre {
           <span>Shows boundary cases and mixed-line scores</span>
         </div>
       </div>
+
+      <div class="info-link-row">
+        <span>Need the full handout?</span>
+        <!-- TODO: Replace href with the real Canvas Project 3 URL -->
+        <a
+          class="info-link-pill"
+          href="https://canvas.uw.edu/courses/COURSE_ID/assignments/PROJECT3_ID"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open Project 3 assignment on Canvas in a new tab"
+        >
+          <span>Open Project 3 on Canvas</span>
+          <span>↗</span>
+        </a>
+      </div>
     </section>
 
     <section class="tester-card">
@@ -664,6 +764,10 @@ body[data-theme="light"] pre {
           <span class="icon" id="runIcon">▶</span>
           <span id="runLabel">Run tests</span>
         </button>
+        <button class="ghost" type="button" onclick="clearInput()">
+          <span class="icon">🧾</span>
+          <span>Clear input</span>
+        </button>
         <button class="ghost" type="button" onclick="clearOutput()">
           <span class="icon">🧹</span>
           <span>Clear output</span>
@@ -678,19 +782,51 @@ body[data-theme="light"] pre {
         </button>
       </div>
 
-      <div class="output-block">
-        <div class="output-label-row">
-          <span>Tester output</span>
-          <span class="right">Results come directly from the official tester file</span>
-        </div>
-        <pre id="out">(waiting...)</pre>
+      <div class="kb-shortcuts">
+        <strong>Shortcuts:</strong><br><br>
+
+        <span>
+          <kbd>Ctrl</kbd> + <kbd>Enter</kbd> (Windows) &nbsp;/&nbsp;
+          <kbd>⌘</kbd> + <kbd>Enter</kbd> (Mac) &nbsp;=&nbsp; Run tests
+        </span>
+        <br><br>
+
+        <span>
+          <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd> (Windows) &nbsp;/&nbsp;
+          <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd> (Mac) &nbsp;=&nbsp; Clear input
+        </span>
+        <br><br>
+
+        <span>
+          <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd> (Windows) &nbsp;/&nbsp;
+          <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd> (Mac) &nbsp;=&nbsp; Clear output
+        </span>
+        <br><br>
+
+        <span>
+          <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> (Windows) &nbsp;/&nbsp;
+          <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> (Mac) &nbsp;=&nbsp; Template
+        </span>
       </div>
+
     </section>
 
   </main>
 
+  <section class="output-card">
+    <div class="output-block">
+      <div class="output-label-row">
+        <span>Tester output (wide view)</span>
+        <span class="right">Scroll horizontally and vertically if needed</span>
+      </div>
+      <pre id="out">(waiting...)</pre>
+    </div>
+  </section>
+
   <div class="footer-note">
-    This page runs your code with <code>EmotionAnalyzerTester.java</code> on the server side. Designed for TCSS 142 &mdash; Emotion-Aware Text Log Analyzer.
+    This page runs your code with <code>EmotionAnalyzerTester.java</code> on the server side.
+    If you are stuck or the website is not working, please contact <strong>Faiz Ahmed</strong>
+    (<a href="mailto:faizahm@uw.edu" style="color:inherit; text-decoration:underline;">faizahm@uw.edu</a>).
   </div>
 
 </div>
@@ -747,6 +883,7 @@ themeToggle.addEventListener("click", toggleTheme);
 /* ---------- Particles ---------- */
 
 (function spawnParticles() {
+  if (!particleLayer) return;
   const count = 26;
   for (let i = 0; i < count; i++) {
     const p = document.createElement("div");
@@ -779,7 +916,7 @@ function setStatus(text, mode) {
   }
 }
 
-/* ---------- Existing required functions ---------- */
+/* ---------- Required functions (kept) ---------- */
 
 function insertTemplate() {
   const tpl = `public class EmotionAnalyzer {
@@ -854,7 +991,12 @@ function clearOutput() {
   setStatus("Ready to run", "ready");
 }
 
-/* ---------- New helpers: copy & download ---------- */
+/* ---------- New helpers: input, copy & download ---------- */
+
+function clearInput() {
+  codeEl.value = "";
+  setStatus("Input cleared", "ready");
+}
 
 function copyOutput() {
   const text = outEl.textContent || "";
@@ -900,6 +1042,35 @@ function downloadOutput() {
   URL.revokeObjectURL(url);
   setStatus("Output downloaded", "ready");
 }
+
+/* ---------- Keyboard shortcuts ---------- */
+/*
+  Ctrl/⌘ + Enter      -> runTests()
+  Ctrl/⌘ + Shift + I  -> clearInput()
+  Ctrl/⌘ + Shift + L  -> clearOutput()
+  Ctrl/⌘ + Shift + T  -> insertTemplate()
+*/
+document.addEventListener("keydown", function(e) {
+  const meta = e.ctrlKey || e.metaKey;
+  if (!meta) return;
+
+  const key = e.key.toLowerCase();
+  const shift = e.shiftKey;
+
+  if (!shift && key === "enter") {
+    e.preventDefault();
+    runTests();
+  } else if (shift && key === "i") {
+    e.preventDefault();
+    clearInput();
+  } else if (shift && key === "l") {
+    e.preventDefault();
+    clearOutput();
+  } else if (shift && key === "t") {
+    e.preventDefault();
+    insertTemplate();
+  }
+});
 </script>
 </body>
 </html>
