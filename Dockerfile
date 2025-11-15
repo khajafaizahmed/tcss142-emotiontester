@@ -1,24 +1,28 @@
 # TCSS 142 Project 3 – EmotionTester container
-# Python image plus headless JDK, same pattern as your old project
+# Python image plus headless JDK to compile/run Java tester
 
 FROM python:3.11-slim
 
-# Install Java (enough for javac/java)
+# Install Java (JDK headless) for javac/java
 RUN apt-get update \
  && apt-get install -y --no-install-recommends default-jdk-headless \
  && rm -rf /var/lib/apt/lists/*
 
+# App directory
 WORKDIR /app
+
+# Copy all repo files into the image
 COPY . .
 
-# Install Flask and Gunicorn
+# Python dependencies: Flask + Gunicorn web server
 RUN pip install --no-cache-dir flask gunicorn
 
-# Defaults, Render will also provide PORT
+# Environment variables for the tester
 ENV TESTER_FILE=EmotionAnalyzerTester.java
 ENV RUN_TIMEOUT=30
 
+# Render will inject PORT, but we expose for local clarity
 EXPOSE 8080
 
-# Use Gunicorn to serve Flask app
+# Start Flask app via Gunicorn
 CMD gunicorn -w 2 -b 0.0.0.0:$PORT server:app
