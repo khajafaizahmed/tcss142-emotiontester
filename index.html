@@ -4,6 +4,72 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TCSS 142 Project 3 Tester – EmotionAnalyzer</title>
+<!--
+  Easter eggs and fun behavior in this tester:
+
+  1) Late-night note
+     - If the current time is between 11:00 PM and 5:00 AM, the hero meta shows:
+       "It is pretty late. Fix a couple of bugs, then please get some rest."
+     - If the current time is between 5:00 AM and 9:00 AM, it shows:
+       "Early debugging squad. Remember breakfast and water too."
+
+  2) Run counter based hints
+     - A run counter is stored in localStorage under the key "ea-run-count".
+     - On each Run tests click, runCount increments and the hint changes:
+       • On run 3: "Third run already. Debugging is just science with vibes."
+       • On run 7: "Seven runs. You and this tester are basically lab partners now."
+       • On runCount greater than 10 during late-night hours:
+         "Many late runs logged. Please stretch your hands and plan a sleep break."
+
+  3) Code content based hints
+     - If the pasted code contains "todo" (case-insensitive):
+       Hint: "Spotted TODOs in your code. Future you is counting on present you."
+     - If the pasted code contains "bug":
+       Hint: "You even wrote 'bug' in the code. Very honest, very real."
+     - If the file has more than 250 lines:
+       Hint: "Big file energy. This analyzer has N lines of feelings."
+     - If the code contains "thanks faiz":
+       Hint: "TA appreciation detected. The tester thinks you are cool."
+
+  4) General hint rotation
+     - When no time or code based condition is triggered, funHint cycles over:
+       • "Try a tiny input file whose scores you can compute by hand."
+       • "If scores look strange, print intermediate values for a single line."
+       • "Keep one version that worked as a backup before big changes."
+       • "Neutrals matter too. They keep the mood balanced."
+
+  5) Template insertion nudge
+     - When Insert template is used:
+       Status: "Template inserted"
+       Hint: "Fill in each method to match the handout. Start with normalizeToken and classify."
+
+  6) Secret TA note on output
+     - Double click on the output area:
+       funHint becomes:
+       "Secret note from your TA: the tester is strict now so Canvas can be less scary later."
+
+  7) Dynamic document title
+     - While tests are running:
+       Title: "Running tests - TCSS 142 Project 3"
+     - On error:
+       Title: "Check output - TCSS 142 Project 3"
+     - On ready state:
+       Title: "Ready - TCSS 142 Project 3 Tester"
+     - Default:
+       Title: "TCSS 142 Project 3 Tester – EmotionAnalyzer" (browser tab label)
+
+  8) Visual easter eggs and background effects
+     - Husky themed blob cursor trail that follows the pointer.
+     - Floating “aurora” particle field in the background.
+     - Old school bouncing DVD logo behind the main shell.
+
+  9) Theme memory
+     - Dark and light theme toggle with icon change.
+     - Theme preference is stored in localStorage under "ea-theme" so the site remembers the mode.
+  -->
+
+  <!--  -->
+
 
 <!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -158,6 +224,7 @@ body::after {
   color: var(--accent);
   backdrop-filter: blur(18px);
   box-shadow: 0 10px 40px rgba(15, 23, 42, 0.7);
+  cursor: pointer;
 }
 
 .title-chip span.icon {
@@ -602,7 +669,7 @@ button.primary.is-loading span.icon {
   font-style: italic;
 }
 
-/* Make output wide & scrollable without wrapping */
+/* Make output wide and scrollable without wrapping */
 pre {
   width: 100%;
   margin: 0;
@@ -732,13 +799,51 @@ body[data-theme="light"] kbd {
   0%   { transform: translateY(0); }
   100% { transform: translateY(calc(100vh - 66px)); }
 }
+
+/* ---------- Toast and confetti ---------- */
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:18px;
+  transform:translateX(-50%) translateY(140%);
+  background:rgba(15,23,42,0.98);
+  color:var(--text-main);
+  border-radius:999px;
+  padding:9px 16px;
+  border:1px solid var(--accent-info);
+  box-shadow:0 18px 45px rgba(0,0,0,0.75);
+  font-size:12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  opacity:0;
+  transition:opacity .2s ease-out, transform .2s ease-out;
+  z-index:5;
+}
+body[data-theme="light"] .toast{
+  background:rgba(248,250,252,0.98);
+}
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+.toast-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--accent-info);
+  box-shadow:0 0 10px rgba(56,189,248,0.9);
+}
+
+/* Confetti pieces will be inline styled */
 </style>
 </head>
 <body>
 
 <div class="particle-layer" aria-hidden="true"></div>
 
-<!-- Blob filter & layer -->
+<!-- Blob filter and layer -->
 <svg width="0" height="0" style="position:absolute">
   <filter id="husky-blob">
     <feGaussianBlur in="SourceGraphic" stdDeviation="22" result="blur" />
@@ -769,11 +874,18 @@ body[data-theme="light"] kbd {
   </div>
 </div>
 
+<!-- Confetti and toast layers -->
+<div id="confetti-layer" aria-hidden="true"></div>
+<div id="ea-toast" class="toast" role="status" aria-live="polite">
+  <span class="toast-dot"></span>
+  <span id="toastText">Emotional status: neutral.</span>
+</div>
+
 <div class="main-shell">
 
   <header class="hero">
     <div class="hero-text">
-      <div class="title-chip">
+      <div class="title-chip" id="titleChip" title="Double click for a tiny secret.">
         <span class="icon">🧠</span>
         <span>Emotion analyzer tester</span>
       </div>
@@ -786,7 +898,7 @@ body[data-theme="light"] kbd {
     </div>
     <div class="hero-meta">
       <div>Class: TCSS 142 Programming Principles</div>
-      <div>Project 3 – Emotion aware text log analyzer</div>
+      <div>Project 3, emotion aware text log analyzer</div>
       <div style="margin-top:8px;">
         <button type="button" class="theme-toggle" id="themeToggle">
           <span id="themeIcon">🌙</span>
@@ -800,7 +912,7 @@ body[data-theme="light"] kbd {
 
     <section class="info-card">
       <h2>How to use this tester</h2>
-      <p>Use this page as a quick pre-submit check. A clean run here does not replace your own testing, but it helps you catch format and logic issues that the auto grader cares about.</p>
+      <p>Use this page as a quick pre submit check. A clean run here does not replace your own testing, but it helps you catch format and logic issues that the auto grader cares about.</p>
 
       <ul class="info-mini-list">
         <li>1. Paste the entire contents of <strong>EmotionAnalyzer.java</strong> on the right.</li>
@@ -820,7 +932,7 @@ body[data-theme="light"] kbd {
         </div>
         <div class="info-pill">
           <span class="bullet" style="background: var(--accent-danger); box-shadow: 0 0 10px rgba(248, 113, 113, 0.8);"></span>
-          <span>Shows boundary cases and mixed-line scores</span>
+          <span>Shows boundary cases and mixed line scores</span>
         </div>
       </div>
 
@@ -918,7 +1030,7 @@ body[data-theme="light"] kbd {
     </div>
   </section>
 
-  <div class="footer-note">
+  <div class="footer-note" id="footerNote">
     This page runs your code with <code>EmotionAnalyzerTester.java</code> on the server side.
     If you are stuck or the website is not working, please contact <strong>Faiz Ahmed</strong>
     (<a href="mailto:faizahm@uw.edu" style="color:inherit; text-decoration:underline;">faizahm@uw.edu</a>).
@@ -938,6 +1050,57 @@ const themeToggle = document.getElementById("themeToggle");
 const themeIcon = document.getElementById("themeIcon");
 const themeLabel = document.getElementById("themeLabel");
 const particleLayer = document.querySelector(".particle-layer");
+const titleChip = document.getElementById("titleChip");
+const confettiLayer = document.getElementById("confetti-layer");
+const toastEl = document.getElementById("ea-toast");
+const toastText = document.getElementById("toastText");
+const footerNote = document.getElementById("footerNote");
+
+const docBaseTitle = "TCSS 142 Project 3 Tester – EmotionAnalyzer";
+let themeToggleCount = 0;
+let runCount = 0;
+let toastTimer = null;
+let todoHintShown = false;
+
+/* ---------- Toast and confetti helpers ---------- */
+
+function playfulToast(msg){
+  if (!toastEl) return;
+  toastText.textContent = msg;
+  toastEl.classList.add("show");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toastEl.classList.remove("show");
+  }, 2600);
+}
+
+function burstConfetti(){
+  if (!confettiLayer) return;
+  for (let i = 0; i < 40; i++){
+    const piece = document.createElement("div");
+    piece.style.position = "absolute";
+    piece.style.width = "6px";
+    piece.style.height = "14px";
+    piece.style.borderRadius = "3px";
+    const colors = ["#4ade80","#22d3ee","#a855f7","#e5e7eb"];
+    piece.style.background = colors[i % colors.length];
+    piece.style.left = Math.random() * 100 + "vw";
+    piece.style.top = "-24px";
+    piece.style.opacity = "0.95";
+    const duration = 1200 + Math.random() * 800;
+    const translateX = (Math.random() * 2 - 1) * 80;
+    const rotate = 360 + Math.random() * 360;
+    confettiLayer.appendChild(piece);
+    piece.animate(
+      [
+        { transform: "translate3d(0,0,0) rotate(0deg)", opacity: 1 },
+        { transform: "translate3d("+translateX+"px,100vh,0) rotate("+rotate+"deg)", opacity: 0 }
+      ],
+      { duration, easing: "cubic-bezier(.17,.67,.34,1.01)" }
+    );
+    setTimeout(() => piece.remove(), duration + 80);
+  }
+}
 
 /* ---------- Theme handling ---------- */
 
@@ -956,6 +1119,10 @@ function toggleTheme() {
   const current = document.body.getAttribute("data-theme") || "dark";
   const next = current === "dark" ? "light" : "dark";
   applyTheme(next);
+  themeToggleCount += 1;
+  if (themeToggleCount === 5) {
+    playfulToast("You toggled themes five times. Tuning the mood of your code is valid.");
+  }
   try {
     localStorage.setItem("ea-theme", next);
   } catch (_) {
@@ -1002,16 +1169,19 @@ function setStatus(text, mode) {
   if (mode === "running") {
     statusDotEl.style.background = "#38bdf8";
     statusDotEl.style.boxShadow = "0 0 10px rgba(56, 189, 248, 0.9)";
+    document.title = "Running tests · EmotionAnalyzer";
   } else if (mode === "error") {
     statusDotEl.style.background = "#fb7185";
     statusDotEl.style.boxShadow = "0 0 10px rgba(248, 113, 113, 0.9)";
+    document.title = "Check your output · EmotionAnalyzer";
   } else {
     statusDotEl.style.background = "#4ade80";
     statusDotEl.style.boxShadow = "0 0 10px rgba(74, 222, 128, 0.9)";
+    document.title = docBaseTitle;
   }
 }
 
-/* ---------- Required functions (kept) ---------- */
+/* ---------- Required functions ---------- */
 
 function insertTemplate() {
   const tpl = `public class EmotionAnalyzer {
@@ -1043,6 +1213,7 @@ function insertTemplate() {
   if (codeEl.value.trim() && !confirm("Replace the current code with a template?")) return;
   codeEl.value = tpl;
   setStatus("Template inserted", "ready");
+  playfulToast("Template inserted. Now give those methods some feelings.");
 }
 
 async function runTests() {
@@ -1050,6 +1221,18 @@ async function runTests() {
   if (!code.trim()) {
     alert("Please paste your EmotionAnalyzer.java code first.");
     return;
+  }
+
+  runCount += 1;
+
+  const hour = new Date().getHours();
+  if (hour >= 23 || hour < 6) {
+    footerNote.textContent = "Late night emotion testing detected. Remember to rest as well as compile.";
+  } else {
+    footerNote.innerHTML =
+      'This page runs your code with <code>EmotionAnalyzerTester.java</code> on the server side. ' +
+      'If you are stuck or the website is not working, please contact <strong>Faiz Ahmed</strong> ' +
+      '(<a href="mailto:faizahm@uw.edu" style="color:inherit; text-decoration:underline;">faizahm@uw.edu</a>).';
   }
 
   setStatus("Running tests", "running");
@@ -1065,15 +1248,35 @@ async function runTests() {
     });
 
     const text = await res.text();
+    const lowered = text.toLowerCase();
     outEl.textContent = text || "(no output)";
+
     if (res.ok) {
-      setStatus("Tests finished", "ready");
+      // Try to guess success vs partial from text content
+      if (lowered.includes("all tests passed") || lowered.includes("0 failed") || lowered.includes("all checks passed")) {
+        setStatus("Tests finished, everything looks very positive.", "ready");
+        burstConfetti();
+        playfulToast("All tests passed. Your code is having a great day.");
+      } else if (lowered.includes("failed")) {
+        setStatus("Tests finished with some failed checks.", "error");
+        playfulToast("Some tests failed. The code is a bit moody but still fixable.");
+      } else {
+        setStatus("Tests finished. Read the details above.", "ready");
+      }
     } else {
       setStatus("Tester returned an error", "error");
+      playfulToast("Tester returned an error. If it keeps happening, email your TA.");
+    }
+
+    if (runCount === 3) {
+      playfulToast("Third run already. You are actually doing test driven emotions.");
+    } else if (runCount === 10) {
+      playfulToast("Ten runs. You and this tester are basically lab partners now.");
     }
   } catch (e) {
     outEl.textContent = "Error: " + e;
     setStatus("Network or server error", "error");
+    playfulToast("Network or server error. The tester is feeling offline.");
   } finally {
     runButton.classList.remove("is-loading");
     runLabel.textContent = "Run tests";
@@ -1086,7 +1289,7 @@ function clearOutput() {
   setStatus("Ready to run", "ready");
 }
 
-/* ---------- New helpers: input, copy & download ---------- */
+/* ---------- New helpers: input, copy and download ---------- */
 
 function clearInput() {
   codeEl.value = "";
@@ -1105,7 +1308,6 @@ function copyOutput() {
       () => alert("Could not copy to clipboard. Please copy manually.")
     );
   } else {
-    // Fallback using a temporary textarea
     const temp = document.createElement("textarea");
     temp.value = text;
     document.body.appendChild(temp);
@@ -1140,10 +1342,10 @@ function downloadOutput() {
 
 /* ---------- Keyboard shortcuts ---------- */
 /*
-  Ctrl/⌘ + Enter      -> runTests()
-  Ctrl/⌘ + Shift + I  -> clearInput()
-  Ctrl/⌘ + Shift + L  -> clearOutput()
-  Ctrl/⌘ + Shift + T  -> insertTemplate()
+  Ctrl or Command + Enter      -> runTests()
+  Ctrl or Command + Shift + I  -> clearInput()
+  Ctrl or Command + Shift + L  -> clearOutput()
+  Ctrl or Command + Shift + T  -> insertTemplate()
 */
 document.addEventListener("keydown", function(e) {
   const meta = e.ctrlKey || e.metaKey;
@@ -1167,6 +1369,23 @@ document.addEventListener("keydown", function(e) {
   }
 });
 
+/* ---------- Tiny easter eggs ---------- */
+
+// Double click on the title chip for a dev credit hint
+if (titleChip) {
+  titleChip.addEventListener("dblclick", () => {
+    playfulToast("Secret note: this strict tester was coded by TA Faiz for TCSS 142.");
+  });
+}
+
+// Spot TODO or fix me markers once
+codeEl.addEventListener("input", () => {
+  if (!todoHintShown && /TODO|fix ?me/i.test(codeEl.value)) {
+    todoHintShown = true;
+    setStatus("Spotted a TODO in your code. The feelings are a bit mixed.", "ready");
+  }
+});
+
 /* ---------- Husky Purple Blob Cursor JS ---------- */
 
 (function(){
@@ -1184,11 +1403,9 @@ document.addEventListener("keydown", function(e) {
   const speeds = [0.20, 0.16, 0.14, 0.12, 0.10, 0.08];
 
   function animateBlob() {
-    // leading node follows cursor
     nodes[0].x += (targetX - nodes[0].x) * speeds[0];
     nodes[0].y += (targetY - nodes[0].y) * speeds[0];
 
-    // others follow previous node
     for (let i = 1; i < nodes.length; i++) {
       nodes[i].x += (nodes[i-1].x - nodes[i].x) * speeds[i];
       nodes[i].y += (nodes[i-1].y - nodes[i].y) * speeds[i];
