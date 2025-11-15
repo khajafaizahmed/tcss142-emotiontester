@@ -121,6 +121,8 @@ body::after {
   margin: 26px auto;
   padding: 16px;
   animation: shellEntrance 0.6s ease-out;
+  position: relative;
+  z-index: 1; /* sits above blob + particles + DVD */
 }
 
 @keyframes shellEntrance {
@@ -668,10 +670,104 @@ body[data-theme="light"] kbd {
 .hidden {
   display: none !important;
 }
+
+/* ---------- Husky Purple Blob Cursor Layer ---------- */
+
+.blob-layer{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  filter:url(#husky-blob);
+  z-index:0;
+  overflow:hidden;
+}
+
+.blob-dot{
+  position:absolute;
+  top:0;
+  left:0;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 20%, #b28cff 0, #6a33d9 40%, #32006e 100%);
+  box-shadow:0 25px 55px rgba(0,0,0,0.85);
+  opacity:0.9;
+  transform:translate3d(-50%, -50%, 0);
+  will-change:transform;
+}
+
+.blob-dot:nth-child(1){ width:55px;  height:55px; }
+.blob-dot:nth-child(2){ width:90px;  height:90px; }
+.blob-dot:nth-child(3){ width:120px; height:120px; }
+.blob-dot:nth-child(4){ width:140px; height:140px; }
+.blob-dot:nth-child(5){ width:100px; height:100px; }
+.blob-dot:nth-child(6){ width:70px;  height:70px; }
+
+/* ---------- DVD Logo Layer ---------- */
+
+.dvd-layer{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0; /* same depth as blob; both under main-shell */
+}
+
+.dvd-x{
+  position:absolute;
+  width:110px;
+  height:66px;
+  animation: dvd-x-move 6.5s linear infinite alternate;
+}
+
+.dvd-y{
+  width:110px;
+  height:66px;
+  animation: dvd-y-move 3.5s linear infinite alternate;
+}
+
+@keyframes dvd-x-move{
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(calc(100vw - 110px)); }
+}
+
+@keyframes dvd-y-move{
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(calc(100vh - 66px)); }
+}
 </style>
 </head>
 <body>
+
 <div class="particle-layer" aria-hidden="true"></div>
+
+<!-- Blob filter & layer -->
+<svg width="0" height="0" style="position:absolute">
+  <filter id="husky-blob">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="22" result="blur" />
+    <feColorMatrix
+      in="blur"
+      mode="matrix"
+      values="1 0 0 0 0
+              0 1 0 0 0
+              0 0 1 0 0
+              0 0 0 35 -10"
+    />
+  </filter>
+</svg>
+
+<div class="blob-layer" aria-hidden="true">
+  <div class="blob-dot"></div>
+  <div class="blob-dot"></div>
+  <div class="blob-dot"></div>
+  <div class="blob-dot"></div>
+  <div class="blob-dot"></div>
+  <div class="blob-dot"></div>
+</div>
+
+<!-- DVD logo bouncing background -->
+<div class="dvd-layer" aria-hidden="true">
+  <div class="dvd-x">
+    <img class="dvd-y" src="https://vgmoose.bdns.dev/dvd_logo.png" alt="dvd" />
+  </div>
+</div>
 
 <div class="main-shell">
 
@@ -730,7 +826,6 @@ body[data-theme="light"] kbd {
 
       <div class="info-link-row">
         <span>Need the full handout?</span>
-        <!-- TODO: Replace href with the real Canvas Project 3 URL -->
         <a
           class="info-link-pill"
           href="https://canvas.uw.edu/courses/1834991/assignments/10837886?module_item_id=25072191"
@@ -1071,6 +1166,65 @@ document.addEventListener("keydown", function(e) {
     insertTemplate();
   }
 });
+
+/* ---------- Husky Purple Blob Cursor JS ---------- */
+
+(function(){
+  const dots = Array.from(document.querySelectorAll('.blob-dot'));
+  if (!dots.length) return;
+
+  const nodes = dots.map(() => ({
+    x: window.innerWidth / 2,
+    y: window.innerHeight / 2
+  }));
+
+  let targetX = window.innerWidth / 2;
+  let targetY = window.innerHeight / 2;
+
+  const speeds = [0.20, 0.16, 0.14, 0.12, 0.10, 0.08];
+
+  function animateBlob() {
+    // leading node follows cursor
+    nodes[0].x += (targetX - nodes[0].x) * speeds[0];
+    nodes[0].y += (targetY - nodes[0].y) * speeds[0];
+
+    // others follow previous node
+    for (let i = 1; i < nodes.length; i++) {
+      nodes[i].x += (nodes[i-1].x - nodes[i].x) * speeds[i];
+      nodes[i].y += (nodes[i-1].y - nodes[i].y) * speeds[i];
+    }
+
+    nodes.forEach((node, i) => {
+      dots[i].style.transform =
+        'translate3d(' + node.x + 'px,' + node.y + 'px,0) translate3d(-50%,-50%,0)';
+    });
+
+    requestAnimationFrame(animateBlob);
+  }
+
+  window.addEventListener('pointermove', (e) => {
+    targetX = e.clientX;
+    targetY = e.clientY;
+  });
+
+  window.addEventListener('touchmove', (e) => {
+    const t = e.touches[0];
+    if (!t) return;
+    targetX = t.clientX;
+    targetY = t.clientY;
+  }, { passive: true });
+
+  window.addEventListener('resize', () => {
+    if (!nodes.length) return;
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    targetX = cx;
+    targetY = cy;
+    nodes.forEach(n => { n.x = cx; n.y = cy; });
+  });
+
+  animateBlob();
+})();
 </script>
 </body>
 </html>
