@@ -25,4 +25,8 @@ ENV RUN_TIMEOUT=30
 EXPOSE 8080
 
 # Start Flask app via Gunicorn
+# Run as an unprivileged user so student code can't modify the app or system files
+RUN useradd --create-home --uid 10001 runner
+USER runner
+
 CMD gunicorn -w 2 -b 0.0.0.0:$PORT server:app
